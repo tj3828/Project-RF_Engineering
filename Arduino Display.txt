@@ -1,0 +1,79 @@
+/*
+ 제목		: 온습도 센서로 실내 온도와 습도 학인하기
+ 내용		: DHT11 온습도 센서를 사용하여 실내 온도와 습도를 측정하고 LCD 에 표시해봅니다
+ */
+
+// LCD를 쉽게 제어하기 위한 라이브러리를 추가합니다.
+#include <LiquidCrystal.h>
+// DHT11 센서를 쉽게 제어하기 위한 라이브러리를 추가합니다.
+#include <DHT11.h>
+
+// LCD 객체를 생성하고 오렌지보드의 3, 4, 10, 11, 12, 13번핀을 사용하도록 설정합니다.
+LiquidCrystal lcd(3,4,10,11,12,13);
+
+// DHT11객체를 생성하고 오렌지보드의 6번핀을 데이터 통신으로 사용하도록 설정합니다.
+DHT11 dht11(6);
+
+// 실행시 가장 먼저 호출되는 함수이며, 최초 1회만 실행됩니다.
+// 변수를 선언하거나 초기화를 위한 코드를 포함합니다.
+void setup() {
+  // 조도센서의 동작 상태를 확인하기 위하여 시리얼 통신을 설정합니다. (전송속도 9600bps)
+  // 메뉴 Tool -> Serial Monitor 클릭
+  Serial.begin(9600);
+  // 16개의 셀과 2줄을 사용하도록 설정합니다.
+  lcd.begin(16,2);
+  // LCD를 초기화 합니다.
+  lcd.clear();
+}
+
+// setup() 함수가 호출된 이후, loop() 함수가 호출되며,
+// 블록 안의 코드를 무한히 반복 실행됩니다.
+void loop() {
+  int err;
+  float humi;
+  float tem;
+
+  // dht11.read() 함수는 DHT11 센서로부터 측정된 값을 읽으며,
+  // 성공시에는 0을 반환하고, 실패시 에러코드를 반환합니다.
+  if ((err = dht11.read(humi, tem)) == 0) {
+
+    // float 데이터 타입의 습도 값을 문자 배열로 변환하고 소숫점 1자리만 유지하도록 합니다.
+    char humiCharValue[10];
+    dtostrf(humi, 4, 1, humiCharValue);
+
+    // 습도 정보를 표시하기 위한 문자열을 생성합니다.
+    String humiDisplayStr = "Humidity: ";
+    humiDisplayStr += (String)humiCharValue;
+    humiDisplayStr += " %";
+
+    // 0번째 줄 0번째 셀부터 입력하게 합니다.
+    lcd.setCursor(0,0);
+    // 현재 습도를 LCD에 출력합니다.
+    lcd.print(humiDisplayStr);
+
+    // float 데이터 타입의 온도 값을 문자 배열로 변환하고 소숫점 1자리만 유지하도록 합니다.
+    char temCharValue[10];
+    dtostrf(tem, 4, 1, temCharValue);
+
+    // 온도 정보를 표시하기 위한 문자열을 생성합니다.
+    String temDisplayStr = "Temper  : ";
+    temDisplayStr += (String)temCharValue;
+    temDisplayStr += "'C";
+
+    // 1번째 줄 0번째 셀부터 입력하게 합니다.
+    lcd.setCursor(0,1);
+    // 현재 온도를 LCD에 출력합니다.
+    lcd.print(temDisplayStr);
+  }
+
+  // 에러 발생시 에러번호와 에러를 시리얼 모니터에 출력합니다.
+  else {
+    Serial.println();
+    Serial.print("Error No :");
+    Serial.print(err);
+    Serial.println();
+  }
+  // DHT11_RETRY_DELAY는 DHT11.h에 정의되어있으며, 1초(1000)입니다.
+  // 따라서 1초동안 대기합니다.
+  delay(DHT11_RETRY_DELAY);
+}
